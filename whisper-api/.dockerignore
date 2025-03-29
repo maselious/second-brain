@@ -1,0 +1,13 @@
+node_modules
+dist
+uploads
+outputs
+.env
+.env.*
+*.log
+*.ogg
+*.wav
+*.txt
+*.tsbuildinfo
+.vscode
+.idea

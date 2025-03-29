@@ -3,6 +3,7 @@ volumes:
   postgres_storage:
   ollama_storage:
   qdrant_storage:
+  models:
 
 networks:
   demo:
@@ -42,9 +43,28 @@ x-init-ollama: &init-ollama
     - OLLAMA_HOST=ollama:11434
   command:
     - "-c"
-    - "sleep 3; ollama pull llama3.2"
+    - "sleep 3; ollama pull deepseek-r1"
 
 services:
+  whisper-api:
+    build:
+      context: ./whisper-api
+    container_name: whisper-api
+    ports:
+      - "3000:3000"
+    networks: [ 'demo' ]
+    volumes:
+      - ./shared/audio:/audios
+      - ./shared/transcripts:/output
+      - models:/app/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+
   postgres:
     image: postgres:16-alpine
     hostname: postgres
