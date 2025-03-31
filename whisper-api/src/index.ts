@@ -20,6 +20,8 @@ const MODEL_PATH = `/app/models/ggml-${MODEL_NAME}.bin`
 const AUDIO_DIR = '/audios'
 const OUTPUT_DIR = '/output'
 
+const ALLOWED_EXTENSIONS = ['.ogg', '.oga', '.mp3', '.wav', '.webm', '.m4a']
+
 // Скачивание модели при необходимости
 function ensureModel() {
   if (!fs.existsSync(MODEL_PATH)) {
@@ -45,8 +47,8 @@ app.post('/transcribe', async (req: Request, res: Response): Promise<void> => {
     }
 
     // 2. Проверка расширения
-    if (!file.endsWith('.ogg')) {
-      res.status(400).json({error: '"file" must be an .ogg file'})
+    if (!ALLOWED_EXTENSIONS.some(ext => file.endsWith(ext))) {
+      res.status(400).json({ error: `"file" must be one of: ${ALLOWED_EXTENSIONS.join(', ')}` })
       return
     }
 
