@@ -115,9 +115,9 @@ function execPromise(command: string): Promise<void> {
         console.log(`🟢 stdout:\n${stdout}`)
       }
 
-      if (stderr) {
-        console.warn(`🟠 stderr:\n${stderr}`)
-      }
+      // if (stderr) {
+      //   console.warn(`🟠 stderr:\n${stderr}`)
+      // }
 
       if (error) {
         console.error(`🔴 Command failed with code ${error.code}: ${command}`)
