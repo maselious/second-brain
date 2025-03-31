@@ -15,7 +15,7 @@ const upload = multer({dest: 'uploads/'})
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 МБ
 
-const MODEL_NAME = process.env.WHISPER_MODEL || 'small'
+const MODEL_NAME = process.env.WHISPER_MODEL || 'base'
 const MODEL_PATH = `/app/models/ggml-${MODEL_NAME}.bin`
 const AUDIO_DIR = '/audios'
 const OUTPUT_DIR = '/output'
@@ -75,7 +75,7 @@ app.post('/transcribe', async (req: Request, res: Response): Promise<void> => {
     console.log(`🎧 Converting OGG to WAV: ${inputWav}`)
     execSync(`ffmpeg -y -i "${inputOgg}" -ar 16000 -ac 1 "${inputWav}"`, {stdio: 'inherit'})
 
-    const command = `./main -m ${MODEL_PATH} -f "${inputWav}" -otxt -of "${outputPath.replace('.txt', '')}" -l ru`
+    const command = `whisper-cli -m ${MODEL_PATH} -f "${inputWav}" -otxt -of "${outputPath.replace('.txt', '')}" -l ru`
     console.log(`🗣️ Whisper CLI: ${command}`)
 
     await execPromise(command)

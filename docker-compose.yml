@@ -57,6 +57,8 @@ services:
       - ./shared/audio:/audios
       - ./shared/transcripts:/output
       - models:/app/models
+    environment:
+      - WHISPER_MODEL=${WHISPER_MODEL}
     deploy:
       resources:
         reservations:

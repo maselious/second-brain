@@ -9,14 +9,6 @@ RUN apt update && \
         ca-certificates && \
     apt clean && rm -rf /var/lib/apt/lists/*
 
-# CUDA
-#RUN wget https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/cuda-keyring_1.1-1_all.deb && \
-#dpkg -i cuda-keyring_1.1-1_all.deb
-#RUN apt update && apt install -y cuda-toolkit-12-8 && rm -rf /var/lib/apt/lists/*
-
-#ENV PATH=/usr/local/cuda-12.8/bin${PATH:+:${PATH}}
-#ENV LD_LIBRARY_PATH=/usr/local/cuda-12.8/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
-
 ENV MODEL_NAME=base
 
 # Whisper
@@ -48,25 +40,35 @@ RUN cmake -B build \
 
 RUN cmake --build build -j --config Release
 
-FROM builder AS runtime
+FROM nvidia/cuda:12.8.1-runtime-ubuntu24.04 AS runner
+
 # Node.js и npm
-RUN apt install -y curl npm && \
+RUN  apt update && apt install -y curl npm ffmpeg ca-certificates && \
   npm install -g n && \
   n 22 && \
   apt purge -y nodejs npm && \
+  apt clean && rm -rf /var/lib/apt/lists/* && \
   ln -sf /usr/local/bin/node /usr/bin/node && \
   ln -sf /usr/local/bin/npm /usr/bin/npm
 
+# shared libs required by whisper and bins
+COPY --from=builder /whisper.cpp/build/bin /usr/local/bin
+COPY --from=builder /whisper.cpp/build/src/*.so /usr/local/lib/
+COPY --from=builder /whisper.cpp/build/ggml/src/*.so /usr/local/lib/
+COPY --from=builder /whisper.cpp/build/ggml/src/ggml-cuda/*.so /usr/local/lib/
+COPY --from=builder /whisper.cpp/build/ggml/src/ggml-cpu/*.so /usr/local/lib/
+
+# Прописать переменные окружения
+ENV WHISPER_MODEL=base
+ENV LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
+
 WORKDIR /app
 
+# Node.js app
 COPY package*.json ./
 RUN npm install
-
 COPY . .
-
 RUN npm run build
 
-ENV WHISPER_MODEL=small
 EXPOSE 3000
-
 ENTRYPOINT ["node", "dist/index.js"]
